@@ -1,0 +1,106 @@
+{% extends "harness/base_console.html" %}
+{% block title %}Products{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="kicker">Catalog</p>
+    <h1>Products</h1>
+    <p class="lede">Same catalog tools for every product. Open a row to edit prices and coupons. Forward pushes this app to IntesaPay; backward pulls IntesaPay into this list.</p>
+  </div>
+  <div class="actions">
+    <form method="post" action="{% url 'catalog_forward' %}">{% csrf_token %}
+      <button class="btn btn-outline" type="submit" {% if not cfg.ready %}disabled{% endif %}>Forward sync</button>
+    </form>
+    <form method="post" action="{% url 'catalog_backward' %}">{% csrf_token %}
+      <button class="btn btn-outline" type="submit" {% if not cfg.ready %}disabled{% endif %}>Backward sync</button>
+    </form>
+    <button class="btn btn-primary" type="button" onclick="document.getElementById('new-product').showModal()">+ New product</button>
+  </div>
+</header>
+
+<div class="ui-table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Partner id</th>
+        <th>Source</th>
+        <th>Prices</th>
+        <th>Gateway</th>
+        <th>Status</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for product in products %}
+      <tr class="clickable" onclick="window.location='{% url 'catalog_product' product.pk %}'">
+        <td>
+          <strong>{{ product.name }}</strong>
+          {% if product.description %}<div class="muted" style="font-size:0.8rem">{{ product.description }}</div>{% endif %}
+        </td>
+        <td><code>{{ product.partner_id }}</code></td>
+        <td>
+          <span class="badge">{{ product.source_label }}</span>
+        </td>
+        <td>
+          {% with n=product.prices.all|length %}
+            {% if n == 0 %}<span class="muted">None</span>
+            {% else %}{{ n }} price{{ n|pluralize }}{% endif %}
+          {% endwith %}
+        </td>
+        <td>
+          {% if product.gateway_status == "synced" %}<span class="badge badge-ok">Synced</span>
+          {% elif product.gateway_status == "pulled" %}<span class="badge">Pulled</span>
+          {% elif product.gateway_status == "error" %}<span class="badge badge-bad">Failed</span>
+          {% else %}<span class="badge badge-warn">Not synced</span>{% endif %}
+          {% if product.intesapay_id %}<div><code>{{ product.intesapay_id }}</code></div>{% endif %}
+        </td>
+        <td>
+          {% if product.active %}<span class="badge badge-ok">Active</span>{% else %}<span class="badge">Inactive</span>{% endif %}
+        </td>
+        <td onclick="event.stopPropagation()">
+          <div class="row-actions">
+            <a class="btn btn-outline" href="{% url 'catalog_product' product.pk %}">Open</a>
+            <form method="post" action="{% url 'catalog_push_product' product.pk %}">{% csrf_token %}
+              <button class="btn btn-outline" type="submit" {% if not cfg.ready %}disabled{% endif %}>Push</button>
+            </form>
+            <form method="post" action="{% url 'catalog_delete_product' product.pk %}" onsubmit="return confirm('Delete {{ product.name }}?');">{% csrf_token %}
+              <button class="btn btn-danger" type="submit">Delete</button>
+            </form>
+          </div>
+        </td>
+      </tr>
+      {% empty %}
+      <tr><td colspan="7" class="empty">No products yet — create one, or run backward sync to pull IntesaPay.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if last_result %}
+<details class="card" style="margin-top:18px">
+  <summary class="muted">{{ last_result.title }}</summary>
+  <pre class="log">{{ last_result.body }}</pre>
+</details>
+{% endif %}
+
+<dialog id="new-product">
+  <form class="dialog-body" method="post" action="{% url 'catalog_create_product' %}">
+    {% csrf_token %}
+    <h2>Create product</h2>
+    <p class="muted" style="margin:0">Then open it to add monthly, weekly, or one-time prices.</p>
+    <label class="field">Name <input name="name" required minlength="2" placeholder="Starter Plan" /></label>
+    <label class="field">Description <input name="description" placeholder="Optional" /></label>
+    <label class="field">Partner id <input name="partner_id" placeholder="sku_starter (optional)" /></label>
+    <div class="dialog-foot">
+      <button class="btn btn-outline" type="button" onclick="document.getElementById('new-product').close()">Cancel</button>
+      <button class="btn btn-primary" type="submit">Create</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}
+{% block extra_js %}
+{% if open_new %}
+<script>document.getElementById('new-product').showModal();</script>
+{% endif %}
+{% endblock %}

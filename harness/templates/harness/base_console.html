@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}Partner test{% endblock %} · IntesaPay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --c-bg: #0f0f14;
+      --c-surface: #18181f;
+      --c-surface-soft: #1f1f28;
+      --c-ink: #f0f0f5;
+      --c-muted: #9191a8;
+      --c-border: rgba(255, 255, 255, 0.1);
+      --c-primary: #c8177a;
+      --c-ok: #86efac;
+      --c-warn: #fde047;
+      --c-bad: #fca5a5;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; height: 100%; }
+    body {
+      background: var(--c-bg);
+      color: var(--c-ink);
+      font-family: Figtree, "Segoe UI", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .app { display: flex; height: 100dvh; overflow: hidden; }
+    .sidebar {
+      width: 232px;
+      flex-shrink: 0;
+      background: var(--c-surface);
+      border-right: 1px solid var(--c-border);
+      display: flex;
+      flex-direction: column;
+      padding: 16px 12px;
+    }
+    .brand { display: block; text-decoration: none; color: inherit; padding: 8px 10px 18px; }
+    .brand strong { display: block; font-size: 1.05rem; letter-spacing: -0.03em; }
+    .brand span { color: var(--c-primary); }
+    .brand small { display: block; margin-top: 4px; color: var(--c-muted); font-size: 0.75rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; }
+    .nav a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      color: var(--c-muted);
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .nav a:hover { background: var(--c-surface-soft); color: var(--c-ink); }
+    .nav a.is-on { background: rgba(200, 23, 122, 0.16); color: var(--c-ink); }
+    .workspace {
+      flex: 1;
+      min-width: 0;
+      overflow: auto;
+      padding: 28px 32px 48px;
+    }
+    .kicker { margin: 0; color: var(--c-muted); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; }
+    .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin: 0 0 24px; }
+    .page-head h1 { margin: 6px 0 8px; font-size: 1.5rem; letter-spacing: -0.03em; }
+    .lede { margin: 0; color: var(--c-muted); max-width: 40rem; font-size: 0.95rem; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: flex-end; }
+    .btn {
+      appearance: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      min-height: 36px;
+      padding: 0 14px;
+      border-radius: 999px;
+      border: 1px solid var(--c-border);
+      background: var(--c-surface-soft);
+      color: var(--c-ink);
+      font: inherit;
+      font-size: 0.875rem;
+      font-weight: 650;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    .btn-primary { background: var(--c-primary); border-color: transparent; color: #fff; }
+    .btn-outline { background: transparent; }
+    .btn-danger { color: var(--c-bad); border-color: rgba(252, 165, 165, 0.28); background: transparent; }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      background: color-mix(in srgb, var(--c-muted) 16%, transparent);
+      color: var(--c-muted);
+    }
+    .badge-ok { background: color-mix(in srgb, #22c55e 18%, transparent); color: var(--c-ok); }
+    .badge-warn { background: color-mix(in srgb, #eab308 18%, transparent); color: var(--c-warn); }
+    .badge-bad { background: color-mix(in srgb, #ef4444 18%, transparent); color: var(--c-bad); }
+    .messages { list-style: none; margin: 0 0 16px; padding: 0; display: grid; gap: 8px; }
+    .messages li { padding: 10px 14px; border-radius: 10px; border: 1px solid var(--c-border); background: var(--c-surface); font-size: 0.875rem; }
+    .messages .error { color: var(--c-bad); border-color: rgba(252, 165, 165, 0.35); }
+    .messages .success { color: var(--c-ok); border-color: rgba(134, 239, 172, 0.35); }
+    .card {
+      background: var(--c-surface);
+      border: 1px solid var(--c-border);
+      border-radius: 16px;
+      padding: 18px 20px;
+      margin-bottom: 18px;
+    }
+    .card h2 { margin: 0 0 14px; font-size: 1rem; }
+    .ui-table-wrap { overflow: auto; border: 1px solid var(--c-border); border-radius: 12px; background: var(--c-surface); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--c-border); vertical-align: middle; }
+    th { color: var(--c-muted); font-size: 0.72rem; letter-spacing: 0.05em; text-transform: uppercase; font-weight: 700; }
+    tr:last-child td { border-bottom: 0; }
+    tbody tr.clickable { cursor: pointer; }
+    tbody tr.clickable:hover { background: var(--c-surface-soft); }
+    code { font-family: ui-monospace, Consolas, monospace; font-size: 0.78rem; color: var(--c-muted); }
+    .muted { color: var(--c-muted); }
+    .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: end; }
+    label.field { display: grid; gap: 6px; font-size: 0.75rem; font-weight: 700; color: var(--c-muted); }
+    input, select, textarea {
+      font: inherit;
+      color: var(--c-ink);
+      background: #0c0c12;
+      border: 1px solid var(--c-border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      min-width: 140px;
+    }
+    textarea { width: 100%; min-height: 72px; }
+    .check { display: flex; align-items: center; gap: 8px; color: var(--c-ink); font-weight: 600; }
+    .back { display: inline-flex; gap: 6px; color: var(--c-muted); text-decoration: none; font-weight: 600; font-size: 0.875rem; margin-bottom: 12px; }
+    .back:hover { color: var(--c-ink); }
+    dialog {
+      border: 1px solid var(--c-border);
+      border-radius: 16px;
+      background: var(--c-surface);
+      color: var(--c-ink);
+      padding: 0;
+      width: min(420px, calc(100vw - 2rem));
+    }
+    dialog::backdrop { background: rgba(0, 0, 0, 0.55); }
+    .dialog-body { padding: 20px 22px 18px; display: grid; gap: 12px; }
+    .dialog-body h2 { margin: 0; }
+    .dialog-foot { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
+    .empty { padding: 36px 16px; text-align: center; color: var(--c-muted); }
+    pre.log { margin: 0; padding: 12px; background: #0c0c12; border-radius: 10px; overflow: auto; max-height: 240px; font-size: 0.78rem; }
+    .row-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .row-actions form { display: inline; }
+  </style>
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <a class="brand" href="{% url 'catalog' %}">
+        <strong>Intesa<span>Pay</span></strong>
+        <small>Partner test</small>
+      </a>
+      <nav class="nav">
+        <a href="{% url 'pricing' %}" class="{% if nav == 'plans' %}is-on{% endif %}">Plans</a>
+        <a href="{% url 'catalog' %}" class="{% if nav == 'catalog' %}is-on{% endif %}">Catalog</a>
+        <a href="{% url 'ops' %}" class="{% if nav == 'ops' %}is-on{% endif %}">Ops</a>
+      </nav>
+    </aside>
+    <main class="workspace">
+      {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+        <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      {% block content %}{% endblock %}
+    </main>
+  </div>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,142 @@
+{% extends "harness/base_console.html" %}
+{% block title %}Ops{% endblock %}
+{% block extra_head %}
+<style>
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid var(--c-border);
+  }
+  .pill.ok { color: var(--c-ok); border-color: rgba(134, 239, 172, 0.4); }
+  .pill.bad { color: var(--c-bad); border-color: rgba(252, 165, 165, 0.4); }
+  details summary { cursor: pointer; color: var(--c-muted); }
+</style>
+{% endblock %}
+{% block content %}
+<header class="page-head">
+  <div>
+    <p class="kicker">Ops</p>
+    <h1>Partner test harness</h1>
+    <p class="lede">Collect, subscribe, and inspect webhooks. Manage products on Catalog — not as a dump of API forms.</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-primary" href="{% url 'catalog' %}">Open catalog</a>
+  </div>
+</header>
+
+<section class="card">
+  <h2>Config (.env)</h2>
+  <p class="muted">
+    Base <code>{{ cfg.base_url }}</code><br />
+    Account <code>{{ cfg.account_id|default:"(missing INTESAPAY_ACCOUNT_ID)" }}</code><br />
+    API key {% if cfg.has_api_key %}<span class="pill ok">set</span>{% else %}<span class="pill bad">missing</span>{% endif %}
+    · Webhook secret {% if cfg.has_webhook_secret %}<span class="pill ok">set</span>{% else %}<span class="pill bad">missing</span>{% endif %}
+  </p>
+  <p class="muted" style="margin-top:10px">
+    Point this account’s webhook URL at<br />
+    <code>http://127.0.0.1:8001/webhooks/intesapay/</code>
+  </p>
+</section>
+
+<section class="card">
+  <h2>API actions</h2>
+  <div class="row" style="margin-bottom:14px">
+    <form method="post" action="{% url 'action_me' %}">{% csrf_token %}
+      <button class="btn btn-outline" type="submit" {% if not cfg.ready %}disabled{% endif %}>Who am I (/me)</button>
+    </form>
+    <form method="post" action="{% url 'action_wallet' %}">{% csrf_token %}
+      <button class="btn btn-outline" type="submit" {% if not cfg.ready %}disabled{% endif %}>Wallet</button>
+    </form>
+  </div>
+
+  <form method="post" action="{% url 'action_collect' %}" class="row" style="margin-bottom:14px">
+    {% csrf_token %}
+    <label class="field">Amount <input name="amount" value="500" /></label>
+    <label class="field">MSISDN <input name="msisdn" value="+256700000001" /></label>
+    <label class="field">Payer name <input name="customer_name" value="Jac Frost" /></label>
+    <label class="field">Note <input name="description" value="partner_test order" style="min-width:200px" /></label>
+    <label class="field">priceId (optional) <input name="price_id" placeholder="price_…" style="min-width:220px" /></label>
+    <button class="btn btn-primary" type="submit" {% if not cfg.ready %}disabled{% endif %}>Collect MM</button>
+  </form>
+
+  <form method="post" action="{% url 'action_poll' %}" class="row" style="margin-bottom:14px">
+    {% csrf_token %}
+    <label class="field">Payment reference <input name="reference" placeholder="from collect response" style="min-width:280px" /></label>
+    <button class="btn btn-outline" type="submit" {% if not cfg.ready %}disabled{% endif %}>Poll status</button>
+  </form>
+
+  <form method="post" action="{% url 'action_payout' %}" class="row">
+    {% csrf_token %}
+    <label class="field">Amount <input name="amount" value="100" /></label>
+    <label class="field">MSISDN <input name="msisdn" value="+256700000001" /></label>
+    <button class="btn btn-outline" type="submit" {% if not cfg.ready %}disabled{% endif %}>TEST payout</button>
+  </form>
+  <p class="muted" style="margin-top:10px">
+    Sandbox success: amount not ending in 02/03, MSISDN ending 0001.
+    Cashout holds principal + fee. HTTP 402 INSUFFICIENT_FUNDS if available is short;
+    HTTP 409 CONCURRENT_REQUEST_IN_PROGRESS if the same Idempotency-Key is still in flight.
+  </p>
+</section>
+
+<section class="card">
+  <h2>Subscribe</h2>
+  <p class="muted" style="margin-top:0">Use a recurring price id from Catalog after you push to IntesaPay.</p>
+  <form method="post" action="{% url 'action_subscribe' %}" class="row">
+    {% csrf_token %}
+    <label class="field">Recurring priceId <input name="price_id" placeholder="price_…" style="min-width:220px" /></label>
+    <label class="field">MSISDN <input name="msisdn" value="+256700000001" /></label>
+    <button class="btn btn-primary" type="submit" {% if not cfg.ready %}disabled{% endif %}>Subscribe</button>
+  </form>
+</section>
+
+{% if last_result %}
+<section class="card">
+  <h2>{{ last_result.title }}</h2>
+  <pre class="log">{{ last_result.body }}</pre>
+</section>
+{% endif %}
+
+<section class="card">
+  <div class="page-head" style="margin-bottom:12px">
+    <h2 style="margin:0">Webhook inbox</h2>
+    <form method="post" action="{% url 'clear_events' %}">{% csrf_token %}
+      <button class="btn btn-outline" type="submit">Clear</button>
+    </form>
+  </div>
+  {% if events %}
+  <div class="ui-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>Event</th>
+          <th>Sig</th>
+          <th>Payload</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for e in events %}
+        <tr>
+          <td>{{ e.received_at|time:"H:i:s" }}</td>
+          <td><code>{{ e.event_type|default:"—" }}</code></td>
+          <td>{% if e.signature_ok %}<span class="pill ok">ok</span>{% else %}<span class="pill bad">bad</span>{% endif %}</td>
+          <td>
+            <details>
+              <summary>view</summary>
+              <pre class="log">{{ e.payload }}</pre>
+              <pre class="log">{{ e.http_headers }}</pre>
+            </details>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <p class="muted">No events yet. After a collect, IntesaPay will POST here if the webhook URL is configured.</p>
+  {% endif %}
+</section>
+{% endblock %}

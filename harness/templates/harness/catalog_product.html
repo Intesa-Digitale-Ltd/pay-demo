@@ -1,0 +1,191 @@
+{% extends "harness/base_console.html" %}
+{% block title %}{{ product.name }}{% endblock %}
+{% block content %}
+<a class="back" href="{% url 'catalog' %}">← Products</a>
+<header class="page-head">
+  <div>
+    <p class="kicker">Catalog</p>
+    <h1>{{ product.name }}</h1>
+    <p class="lede">
+      <code>{{ product.partner_id }}</code>
+      {% if product.intesapay_id %} · IntesaPay <code>{{ product.intesapay_id }}</code>{% endif %}
+    </p>
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      {% if product.source_label %}<span class="badge">{{ product.source_label }}</span>{% endif %}
+      {% if product.gateway_status == "synced" %}<span class="badge badge-ok">Synced</span>
+      {% elif product.gateway_status == "pulled" %}<span class="badge">Pulled</span>
+      {% elif product.gateway_status == "error" %}<span class="badge badge-bad">Sync failed</span>
+      {% else %}<span class="badge badge-warn">Not synced</span>{% endif %}
+      {% if product.active %}<span class="badge badge-ok">Active</span>{% else %}<span class="badge">Inactive</span>{% endif %}
+    </div>
+    {% if product.sync_error %}
+    <ul class="messages" style="margin-top:12px"><li class="error">{{ product.sync_error }}</li></ul>
+    {% endif %}
+  </div>
+  <div class="actions">
+    <form method="post" action="{% url 'catalog_push_product' product.pk %}">{% csrf_token %}
+      <button class="btn btn-primary" type="submit" {% if not cfg.ready %}disabled{% endif %}>Push to IntesaPay</button>
+    </form>
+    <form method="post" action="{% url 'catalog_delete_product' product.pk %}" onsubmit="return confirm('Delete this product?');">{% csrf_token %}
+      <button class="btn btn-danger" type="submit">Delete</button>
+    </form>
+  </div>
+</header>
+
+<section class="card">
+  <h2>Details</h2>
+  <form class="row" method="post" action="{% url 'catalog_update_product' product.pk %}">
+    {% csrf_token %}
+    <label class="field">Name <input name="name" value="{{ product.name }}" required /></label>
+    <label class="field">Description <input name="description" value="{{ product.description }}" style="min-width:260px" /></label>
+    <label class="check"><input type="checkbox" name="active" {% if product.active %}checked{% endif %} /> Active</label>
+    <button class="btn btn-outline" type="submit">Save</button>
+  </form>
+</section>
+
+<section class="card">
+  <div class="page-head" style="margin-bottom:12px">
+    <h2 style="margin:0">Prices</h2>
+    <button class="btn btn-primary" type="button" onclick="document.getElementById('new-price').showModal()">+ Add price</button>
+  </div>
+  <div class="ui-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Partner id</th>
+          <th>Amount</th>
+          <th>Schedule</th>
+          <th>Gateway</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for price in product.prices.all %}
+        <tr>
+          <td><code>{{ price.partner_id }}</code></td>
+          <td>{{ price.unit_amount }} {{ price.currency }}</td>
+          <td>{{ price.schedule_label }}</td>
+          <td>
+            {% if price.intesapay_id %}<span class="badge badge-ok">Synced</span> <code>{{ price.intesapay_id }}</code>
+            {% else %}<span class="badge badge-warn">Not synced</span>{% endif %}
+          </td>
+          <td>
+            <form method="post" action="{% url 'catalog_delete_price' price.pk %}">{% csrf_token %}
+              <button class="btn btn-danger" type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="empty">No prices yet. Add monthly, weekly, or one-time options.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section class="card">
+  <div class="page-head" style="margin-bottom:12px">
+    <h2 style="margin:0">Coupons</h2>
+    <button class="btn btn-primary" type="button" onclick="document.getElementById('new-coupon').showModal()">+ Add coupon</button>
+  </div>
+  <div class="ui-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Offer</th>
+          <th>Code</th>
+          <th>Gateway</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for coupon in product.coupons.all %}
+        <tr>
+          <td>{{ coupon.name }}<div><code>{{ coupon.partner_id }}</code></div></td>
+          <td>{{ coupon.offer_label }} · {{ coupon.duration }}</td>
+          <td><code>{{ coupon.code|default:"—" }}</code></td>
+          <td>
+            {% if coupon.intesapay_id %}<span class="badge badge-ok">Synced</span> <code>{{ coupon.intesapay_id }}</code>
+            {% else %}<span class="badge badge-warn">Not synced</span>{% endif %}
+          </td>
+          <td>
+            <form method="post" action="{% url 'catalog_delete_coupon' coupon.pk %}">{% csrf_token %}
+              <button class="btn btn-danger" type="submit">Delete</button>
+            </form>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="empty">No coupons. Pass coupon id or code on checkout — nothing auto-applies.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
+
+{% if last_result %}
+<details class="card">
+  <summary class="muted">{{ last_result.title }}</summary>
+  <pre class="log">{{ last_result.body }}</pre>
+</details>
+{% endif %}
+
+<dialog id="new-price">
+  <form class="dialog-body" method="post" action="{% url 'catalog_add_price' product.pk %}">
+    {% csrf_token %}
+    <h2>Add price</h2>
+    <label class="field">Amount <input name="unit_amount" type="number" min="0.01" step="0.01" required value="5000" /></label>
+    <label class="field">Currency <input name="currency" value="UGX" maxlength="3" /></label>
+    <label class="field">Type
+      <select name="pricing_type">
+        <option value="ONE_TIME">One-time</option>
+        <option value="RECURRING" selected>Recurring</option>
+      </select>
+    </label>
+    <label class="field">Interval
+      <select name="billing_interval">
+        <option value="DAY">Day</option>
+        <option value="WEEK">Week</option>
+        <option value="MONTH" selected>Month</option>
+        <option value="YEAR">Year</option>
+      </select>
+    </label>
+    <label class="field">Partner id <input name="partner_id" placeholder="optional" /></label>
+    <div class="dialog-foot">
+      <button class="btn btn-outline" type="button" onclick="document.getElementById('new-price').close()">Cancel</button>
+      <button class="btn btn-primary" type="submit">Create</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="new-coupon">
+  <form class="dialog-body" method="post" action="{% url 'catalog_add_coupon' product.pk %}">
+    {% csrf_token %}
+    <h2>Add coupon</h2>
+    <label class="field">Name <input name="name" required placeholder="Launch 20%" /></label>
+    <label class="field">Code <input name="code" placeholder="SAVE20" /></label>
+    <label class="field">Percent off <input name="percent_off" type="number" min="0.01" step="0.01" placeholder="20" /></label>
+    <label class="field">Amount off <input name="amount_off" type="number" min="0.01" step="0.01" /></label>
+    <label class="field">Duration
+      <select name="duration">
+        <option value="ONCE">Once</option>
+        <option value="REPEATING">Repeating</option>
+        <option value="FOREVER">Forever</option>
+      </select>
+    </label>
+    <label class="field">Months (if repeating) <input name="duration_in_months" type="number" min="1" placeholder="3" /></label>
+    <label class="field">Scope to price
+      <select name="partner_price_id">
+        <option value="">All prices</option>
+        {% for price in product.prices.all %}
+        <option value="{{ price.partner_id }}">{{ price.partner_id }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    <div class="dialog-foot">
+      <button class="btn btn-outline" type="button" onclick="document.getElementById('new-coupon').close()">Cancel</button>
+      <button class="btn btn-primary" type="submit">Create</button>
+    </div>
+  </form>
+</dialog>
+{% endblock %}

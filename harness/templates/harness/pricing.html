@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>IntesaPay · Plans</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #14181f;
+      --muted: #5c6674;
+      --line: rgba(20, 24, 31, 0.12);
+      --surface: rgba(255, 255, 255, 0.78);
+      --surface-solid: #f7f4ef;
+      --accent: #c8177a;
+      --accent-deep: #9a125e;
+      --ok: #0f7a4c;
+      --bad: #b42318;
+      --shadow: 0 18px 50px rgba(20, 24, 31, 0.08);
+      --radius: 22px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Instrument Sans", system-ui, sans-serif;
+      background:
+        radial-gradient(ellipse 90% 60% at 10% -10%, rgba(200, 23, 122, 0.18), transparent 55%),
+        radial-gradient(ellipse 70% 50% at 95% 5%, rgba(20, 70, 120, 0.12), transparent 50%),
+        linear-gradient(180deg, #fbf8f3 0%, #efe8de 48%, #e7ece8 100%);
+      line-height: 1.5;
+    }
+    a { color: inherit; }
+    .shell {
+      width: min(1120px, calc(100% - 2rem));
+      margin: 0 auto;
+      padding: 1.25rem 0 4rem;
+    }
+    .topnav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+    .brand {
+      display: flex;
+      align-items: baseline;
+      gap: 0.55rem;
+      text-decoration: none;
+    }
+    .brand-mark {
+      font-family: "Newsreader", Georgia, serif;
+      font-size: 1.55rem;
+      font-weight: 600;
+      letter-spacing: -0.03em;
+    }
+    .brand-mark span { color: var(--accent); }
+    .brand-tag {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .nav-link {
+      font-size: 0.875rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+    }
+    .nav-link:hover, .nav-link.is-on { color: var(--ink); border-color: var(--line); }
+
+    .hero {
+      max-width: 38rem;
+      margin: 0 0 2.75rem;
+    }
+    .hero h1 {
+      margin: 0 0 0.65rem;
+      font-family: "Newsreader", Georgia, serif;
+      font-size: clamp(2.1rem, 4.5vw, 3.15rem);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1.12;
+    }
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+      max-width: 34rem;
+    }
+
+    .messages {
+      list-style: none;
+      margin: 0 0 1.5rem;
+      padding: 0;
+      display: grid;
+      gap: 0.5rem;
+    }
+    .messages li {
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      background: var(--surface);
+      border: 1px solid var(--line);
+      font-size: 0.9rem;
+      backdrop-filter: blur(8px);
+    }
+    .messages .success { border-color: rgba(15, 122, 76, 0.35); color: var(--ok); }
+    .messages .error { border-color: rgba(180, 35, 24, 0.35); color: var(--bad); }
+
+    .banner {
+      padding: 1rem 1.15rem;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.65);
+      border: 1px solid var(--line);
+      color: var(--muted);
+      margin-bottom: 1.75rem;
+    }
+    .banner strong { color: var(--ink); }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      align-items: stretch;
+    }
+
+    .card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+      padding: 1.45rem 1.4rem 1.35rem;
+      border-radius: var(--radius);
+      background: var(--surface);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 24px 56px rgba(20, 24, 31, 0.12);
+    }
+    .card.is-featured {
+      border-color: rgba(200, 23, 122, 0.35);
+      background:
+        linear-gradient(165deg, rgba(255, 255, 255, 0.92), rgba(255, 245, 250, 0.88));
+    }
+    .card.is-featured::before {
+      content: "Popular";
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--accent-deep);
+      background: rgba(200, 23, 122, 0.1);
+      padding: 0.28rem 0.55rem;
+      border-radius: 999px;
+    }
+
+    .card-head h2 {
+      margin: 0 0 0.35rem;
+      font-family: "Newsreader", Georgia, serif;
+      font-size: 1.65rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      padding-right: 4.5rem;
+    }
+    .card-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    .offers {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.28rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      background: rgba(200, 23, 122, 0.08);
+      color: var(--accent-deep);
+      border: 1px solid rgba(200, 23, 122, 0.18);
+    }
+    .chip code {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.7rem;
+      letter-spacing: 0.04em;
+    }
+
+    .tiers {
+      display: grid;
+      gap: 0.55rem;
+    }
+    .tier {
+      display: grid;
+      gap: 0.15rem;
+      padding: 0.85rem 0.95rem;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.55);
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+    }
+    .tier:has(input:checked) {
+      border-color: rgba(200, 23, 122, 0.55);
+      background: rgba(200, 23, 122, 0.06);
+    }
+    .tier-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+    .tier-row input { accent-color: var(--accent); margin: 0 0.45rem 0 0; }
+    .tier-amount {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+    .tier-amount .was {
+      margin-left: 0.4rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--muted);
+      text-decoration: line-through;
+    }
+    .tier-meta {
+      font-size: 0.8rem;
+      color: var(--muted);
+      padding-left: 1.45rem;
+    }
+    .tier-deal {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--accent-deep);
+      padding-left: 1.45rem;
+    }
+
+    .checkout {
+      margin-top: auto;
+      display: grid;
+      gap: 0.65rem;
+      padding-top: 0.35rem;
+      border-top: 1px solid var(--line);
+    }
+    .field {
+      display: grid;
+      gap: 0.3rem;
+    }
+    .field label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .field input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 0.7rem 0.85rem;
+      font: inherit;
+      background: #fff;
+      color: var(--ink);
+    }
+    .field input:focus {
+      outline: 2px solid rgba(200, 23, 122, 0.25);
+      border-color: rgba(200, 23, 122, 0.45);
+    }
+    .btn {
+      appearance: none;
+      border: none;
+      border-radius: 999px;
+      padding: 0.85rem 1.1rem;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--ink);
+      color: #fff;
+      transition: background 0.15s ease, transform 0.15s ease;
+    }
+    .btn:hover { background: var(--accent); }
+    .btn:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+    .btn.accent { background: var(--accent); }
+    .btn.accent:hover { background: var(--accent-deep); }
+
+    .empty {
+      padding: 2.5rem 1.5rem;
+      text-align: center;
+      border-radius: var(--radius);
+      border: 1px dashed var(--line);
+      background: rgba(255, 255, 255, 0.45);
+      color: var(--muted);
+    }
+
+    .result {
+      margin-top: 2rem;
+      padding: 1rem 1.15rem;
+      border-radius: 14px;
+      background: rgba(20, 24, 31, 0.92);
+      color: #e8eaef;
+    }
+    .result h3 {
+      margin: 0 0 0.5rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #9aa3b2;
+    }
+    .result pre {
+      margin: 0;
+      overflow: auto;
+      max-height: 280px;
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.78rem;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 640px) {
+      .card-head h2 { padding-right: 0; }
+      .card.is-featured::before { position: static; align-self: flex-start; margin-bottom: 0.25rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <nav class="topnav">
+      <a class="brand" href="{% url 'pricing' %}">
+        <span class="brand-mark">Intesa<span>Pay</span></span>
+        <span class="brand-tag">Partner demo</span>
+      </a>
+      <div class="nav-links" style="display:flex;gap:1.1rem">
+        <a class="nav-link is-on" href="{% url 'pricing' %}">Plans</a>
+        <a class="nav-link" href="{% url 'catalog' %}">Catalog</a>
+        <a class="nav-link" href="{% url 'ops' %}">Ops</a>
+      </div>
+    </nav>
+
+    <header class="hero">
+      <h1>Choose a plan that fits your rhythm.</h1>
+      <p>Live catalog from your IntesaPay account — open hosted checkout (MSISDN + optional invoice email) or subscribe over mobile money.</p>
+    </header>
+
+    {% if request.GET.checkout == "ok" %}
+    <div class="banner">
+      Checkout returned successfully. Confirm the payment webhook or poll the reference in Ops if needed.
+    </div>
+    {% elif request.GET.checkout == "cancel" %}
+    <div class="banner">
+      Checkout was cancelled. Pick a plan again when you’re ready.
+    </div>
+    {% endif %}
+
+    {% if messages %}
+    <ul class="messages">
+      {% for message in messages %}
+      <li class="{{ message.tags }}">{{ message }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+
+    {% if not cfg.ready %}
+    <div class="banner">
+      Set <strong>INTESAPAY_API_KEY</strong> and <strong>INTESAPAY_ACCOUNT_ID</strong> in <code>.env</code>, then refresh.
+    </div>
+    {% elif fetch_error %}
+    <div class="banner">
+      Couldn’t load products: <strong>{{ fetch_error }}</strong>
+    </div>
+    {% endif %}
+
+    {% if cards %}
+    <section class="grid" aria-label="Plans">
+      {% for card in cards %}
+      <article class="card{% if card.featured %} is-featured{% endif %}">
+        <div class="card-head">
+          <h2>{{ card.name }}</h2>
+          {% if card.description %}<p>{{ card.description }}</p>{% endif %}
+        </div>
+
+        {% if card.offers %}
+        <div class="offers" aria-label="Offers">
+          {% for offer in card.offers %}
+          <span class="chip">
+            {{ offer.badge }}
+            {% if offer.code %}<code>{{ offer.code }}</code>{% endif %}
+            {% if offer.new_customers_only %}· new customers{% endif %}
+          </span>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if card.prices %}
+        <form method="post" action="{% url 'action_checkout' %}" class="checkout">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="pricing" />
+          <div class="tiers" role="radiogroup" aria-label="{{ card.name }} pricing">
+            {% for price in card.prices %}
+            <label class="tier">
+              <div class="tier-row">
+                <span>
+                  <input
+                    type="radio"
+                    name="price_id"
+                    value="{{ price.id }}"
+                    {% if forloop.first %}checked{% endif %}
+                    data-coupon-id="{{ price.coupon_id|default:'' }}"
+                    data-coupon-code="{{ price.coupon_code|default:'' }}"
+                  />
+                  <span class="tier-amount">
+                    {% if price.tax_label and price.momo_total_label %}
+                      {{ price.momo_total_label }}
+                      {% if price.intro_amount_label and price.intro_amount_label != price.momo_total_label %}
+                      <span class="was">{{ price.amount_label }}</span>
+                      {% elif not price.intro_amount_label and price.amount_label != price.momo_total_label %}
+                      <span class="was">{{ price.amount_label }}</span>
+                      {% endif %}
+                    {% elif price.intro_amount_label %}
+                      {{ price.intro_amount_label }}
+                      <span class="was">{{ price.amount_label }}</span>
+                    {% else %}
+                      {{ price.amount_label }}
+                    {% endif %}
+                  </span>
+                </span>
+              </div>
+              <div class="tier-meta">{{ price.schedule }}{% if price.tax_label %} · {{ price.tax_label }}{% endif %}</div>
+              {% if price.coupon_badge %}
+              <div class="tier-deal">{{ price.coupon_badge }}{% if price.coupon_code %} · code {{ price.coupon_code }}{% endif %}</div>
+              {% endif %}
+            </label>
+            {% endfor %}
+          </div>
+
+          <input type="hidden" name="coupon_id" value="" class="js-coupon-id" />
+          <input type="hidden" name="coupon_code" value="" class="js-coupon-code" />
+
+          <div class="field">
+            <label for="name-{{ card.id }}">Payer name (optional)</label>
+            <input id="name-{{ card.id }}" name="customer_name" type="text" placeholder="Jane Okello" value="Jac Frost" />
+          </div>
+          <div class="field">
+            <label for="email-{{ card.id }}">Email for invoice (optional)</label>
+            <input id="email-{{ card.id }}" name="customer_email" type="email" placeholder="you@example.com" value="jacfrost06@gmail.com" />
+          </div>
+          <div class="field">
+            <label for="note-{{ card.id }}">Note (optional)</label>
+            <input id="note-{{ card.id }}" name="description" type="text" placeholder="Order / invoice ref" value="partner_test checkout" />
+          </div>
+          <div class="field">
+            <label for="promo-{{ card.id }}">Promo code (optional)</label>
+            <input id="promo-{{ card.id }}" name="coupon_code_override" placeholder="Promo code" class="js-promo" />
+          </div>
+          <button class="btn{% if card.featured %} accent{% endif %}" type="submit" {% if not cfg.ready %}disabled{% endif %}>
+            Pay with hosted checkout
+          </button>
+        </form>
+        {% else %}
+        <p class="tier-meta" style="padding:0">No active prices yet.</p>
+        {% endif %}
+      </article>
+      {% endfor %}
+    </section>
+    {% elif cfg.ready and not fetch_error %}
+    <div class="empty">No active products in this account yet. Create managed products in the console, then refresh.</div>
+    {% endif %}
+
+    {% if last_result %}
+    <aside class="result">
+      <h3>{{ last_result.title }}</h3>
+      <pre>{{ last_result.body }}</pre>
+    </aside>
+    {% endif %}
+  </div>
+
+  <script>
+    document.querySelectorAll("form.checkout").forEach((form) => {
+      const sync = () => {
+        const selected = form.querySelector('input[name="price_id"]:checked');
+        const promo = form.querySelector(".js-promo");
+        const couponId = form.querySelector(".js-coupon-id");
+        const couponCode = form.querySelector(".js-coupon-code");
+        if (!selected || !couponId || !couponCode) return;
+        const typed = (promo && promo.value || "").trim();
+        if (typed) {
+          couponId.value = "";
+          couponCode.value = typed;
+        } else {
+          couponId.value = selected.dataset.couponId || "";
+          couponCode.value = selected.dataset.couponCode || "";
+        }
+      };
+      form.addEventListener("change", sync);
+      form.addEventListener("input", sync);
+      form.addEventListener("submit", sync);
+      sync();
+    });
+  </script>
+</body>
+</html>
