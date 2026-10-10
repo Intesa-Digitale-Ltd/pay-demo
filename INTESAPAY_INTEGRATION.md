@@ -2,7 +2,7 @@
 
 A walkthrough of `apps/partner_test`. Use it as a case study: one pretend partner product, one IntesaPay account, and the calls a real integration makes.
 
-The app is a small Django site on port **8001**. IntesaPay (the payments API) is expected on **http://localhost:8080**. Nothing in this app moves money by itself. Every collect, payout, checkout, and catalog change is an HTTP call to IntesaPay, using credentials from the console.
+The app is a small Django site on port **8001**. It calls the hosted IntesaPay API at **https://api-test.intesapay.io**. Nothing in this app moves money by itself. Every collect, payout, checkout, and catalog change is an HTTP call to that API, using credentials from the console.
 
 Open three pages while you read:
 
@@ -32,7 +32,7 @@ Browser  →  this Django app (port 8001)
                 │  X-API-Key
                 │  X-Account-Id
                 ▼
-            IntesaPay API (port 8080)
+            IntesaPay API (https://api-test.intesapay.io)
                 │
                 │  POST /webhooks/intesapay/
                 ▼
@@ -47,7 +47,7 @@ Three credentials, all from the console account page, all in `.env`:
 | `INTESAPAY_API_KEY` | Secret API key. Sent as `X-API-Key`. | Shown once when the key is created or rotated |
 | `INTESAPAY_WEBHOOK_SECRET` | Used only to check `IntesaPay-Signature`. Never sent on outbound calls. | Account webhook settings |
 
-`INTESAPAY_BASE_URL` is where the API lives. Locally that is `http://localhost:8080`.
+`INTESAPAY_BASE_URL` is where the API lives. Use **https://api-test.intesapay.io**.
 
 The app refuses to call the API until both the key and the account id are set. The Ops page shows that as “API key set / missing”.
 
@@ -66,19 +66,19 @@ python manage.py migrate
 python manage.py runserver 8001
 ```
 
-Edit `.env` with the account id, API key, and webhook secret from the console. Then, on that same account, set the webhook URL to:
+`.env.example` already sets `INTESAPAY_BASE_URL` to `https://api-test.intesapay.io`. Fill in the account id, API key, and webhook secret from the console.
+
+That API cannot reach `127.0.0.1` on your laptop. Expose this app with a tunnel, then set the account webhook URL to:
 
 ```text
-http://127.0.0.1:8001/webhooks/intesapay/
+https://<your-tunnel>/webhooks/intesapay/
 ```
-
-If IntesaPay is running in Docker on another machine, it cannot reach `127.0.0.1` on your laptop. Use a tunnel, or `http://host.docker.internal:8001/webhooks/intesapay/` when the API container is on the same machine.
 
 Settings are loaded once at startup:
 
 ```69:73:apps/partner_test/config/settings.py
 # IntesaPay partner credentials (from console account detail)
-INTESAPAY_BASE_URL = os.getenv("INTESAPAY_BASE_URL", "http://localhost:8080").rstrip("/")
+INTESAPAY_BASE_URL = os.getenv("INTESAPAY_BASE_URL", "https://api-test.intesapay.io").rstrip("/")
 INTESAPAY_ACCOUNT_ID = os.getenv("INTESAPAY_ACCOUNT_ID", "")
 INTESAPAY_API_KEY = os.getenv("INTESAPAY_API_KEY", "")
 INTESAPAY_WEBHOOK_SECRET = os.getenv("INTESAPAY_WEBHOOK_SECRET", "")

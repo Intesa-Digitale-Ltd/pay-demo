@@ -67,7 +67,7 @@ STATIC_URL = "static/"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # IntesaPay partner credentials (from console account detail)
-INTESAPAY_BASE_URL = os.getenv("INTESAPAY_BASE_URL", "http://localhost:8080").rstrip("/")
+INTESAPAY_BASE_URL = os.getenv("INTESAPAY_BASE_URL", "https://api-test.intesapay.io").rstrip("/")
 INTESAPAY_ACCOUNT_ID = os.getenv("INTESAPAY_ACCOUNT_ID", "")
 INTESAPAY_API_KEY = os.getenv("INTESAPAY_API_KEY", "")
 INTESAPAY_WEBHOOK_SECRET = os.getenv("INTESAPAY_WEBHOOK_SECRET", "")
@@ -76,4 +76,5 @@ INTESAPAY_WEBHOOK_SECRET = os.getenv("INTESAPAY_WEBHOOK_SECRET", "")
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:8001",
     "http://127.0.0.1:8001",
+    "https://api-test.intesapay.io",
 ]

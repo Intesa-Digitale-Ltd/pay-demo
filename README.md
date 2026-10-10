@@ -1,6 +1,6 @@
 # Partner test harness (Django)
 
-Minimal stand-in for a SaaS backend integrating **one IntesaPay account**.
+Minimal stand-in for a SaaS backend integrating **one IntesaPay account** on **https://api-test.intesapay.io**.
 
 Uses:
 
@@ -16,7 +16,8 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 copy .env.example .env
-# edit .env with values from console → Accounts → account detail
+# INTESAPAY_BASE_URL is already https://api-test.intesapay.io
+# edit account id, API key, and webhook secret from console → Accounts → account detail
 python manage.py migrate
 python manage.py runserver 8001
 ```
@@ -25,13 +26,13 @@ Open http://127.0.0.1:8001/
 
 ## Webhook
 
-In the console account, set webhook URL to:
+The API at `https://api-test.intesapay.io` cannot reach `127.0.0.1` on your laptop. Expose this app with a tunnel, then set the console account webhook URL to:
 
 ```text
-http://127.0.0.1:8001/webhooks/intesapay/
+https://<your-tunnel>/webhooks/intesapay/
 ```
 
-(Use a tunnel if payments runs on another host.) Put the signing secret in `INTESAPAY_WEBHOOK_SECRET`.
+Put the signing secret in `INTESAPAY_WEBHOOK_SECRET`.
 
 ## Catalog
 
